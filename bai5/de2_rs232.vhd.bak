@@ -1,0 +1,25 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity Ex5 is
+ -- generic (data_byte: integer:=8);
+  port(
+       clk_50: in std_logic;
+		 rst: in std_logic;
+		 --LED
+		 led:out std_logic_vector (7 downto 0);
+		 
+		 --LCD
+		 lcd_rs: out std_logic;
+		 lcd_en: out std_logic;
+		 lcd_rw: out std_logic;
+		 lcd_on: out std_logic;
+		 lcd_blon: out std_logic;
+		 lcd_data: inout std_logic_vector(7 downto 0);
+		 
+		 --RS232
+		 rs232_tx: out std_logic;
+		 rs232_rx: in std_logic
+		
+       );
+end Ex5;

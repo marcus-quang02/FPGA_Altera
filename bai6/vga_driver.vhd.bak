@@ -1,0 +1,108 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity Ex6 is
+    port(
+        clk_50   : in std_logic;  -- 50 MHz clock input
+        rst      : in std_logic;  -- Reset input
+        vga_r    : out std_logic_vector(7 downto 0); -- Red color output
+        vga_g    : out std_logic_vector(7 downto 0); -- Green color output
+        vga_b    : out std_logic_vector(7 downto 0); -- Blue color output
+        vga_clk  : out std_logic; -- VGA clock
+        vga_blank: out std_logic; -- VGA blanking signal
+        vga_hs   : out std_logic; -- VGA horizontal sync
+        vga_vs   : out std_logic; -- VGA vertical sync
+        vga_sync : out std_logic  -- VGA sync (tied to ground)
+    );
+end entity;
+
+architecture Behavioral of Ex6 is
+
+    -- VGA timing constants for 640x480 at 60 Hz
+    constant H_DISPLAY    : integer := 640;  -- Horizontal display area
+    constant H_FRONT_PORCH: integer := 16;   -- Horizontal front porch
+    constant H_SYNC_PULSE : integer := 96;   -- Horizontal sync pulse
+    constant H_BACK_PORCH : integer := 48;   -- Horizontal back porch
+    constant H_TOTAL      : integer := H_DISPLAY + H_FRONT_PORCH + H_SYNC_PULSE + H_BACK_PORCH;
+
+    constant V_DISPLAY    : integer := 480;  -- Vertical display area
+    constant V_FRONT_PORCH: integer := 10;   -- Vertical front porch
+    constant V_SYNC_PULSE : integer := 2;    -- Vertical sync pulse
+    constant V_BACK_PORCH : integer := 33;   -- Vertical back porch
+    constant V_TOTAL      : integer := V_DISPLAY + V_FRONT_PORCH + V_SYNC_PULSE + V_BACK_PORCH;
+
+    -- Counters for horizontal and vertical timings
+    signal h_count : integer range 0 to H_TOTAL - 1 := 0;
+    signal v_count : integer range 0 to V_TOTAL - 1 := 0;
+
+    -- Clock divider for 25 MHz pixel clock
+    signal pixel_clk : std_logic := '0';
+    signal clk_div   : integer range 0 to 1 := 0;
+
+begin
+
+    -- Generate pixel clock (25 MHz)
+    process (clk_50, rst)
+    begin
+        if rst = '1' then
+            clk_div <= 0;
+            pixel_clk <= '0';
+        elsif rising_edge(clk_50) then
+            clk_div <= clk_div + 1;
+            if clk_div = 1 then
+                pixel_clk <= not pixel_clk;
+                clk_div <= 0;
+            end if;
+        end if;
+    end process;
+    vga_clk <= pixel_clk; -- Output pixel clock
+
+    -- Horizontal and vertical counters
+    process (pixel_clk, rst)
+    begin
+        if rst = '1' then
+            h_count <= 0;
+            v_count <= 0;
+        elsif rising_edge(pixel_clk) then
+            if h_count = H_TOTAL - 1 then
+                h_count <= 0;
+                if v_count = V_TOTAL - 1 then
+                    v_count <= 0;
+                else
+                    v_count <= v_count + 1;
+                end if;
+            else
+                h_count <= h_count + 1;
+            end if;
+        end if;
+    end process;
+
+    -- Generate horizontal sync pulse
+    vga_hs <= '0' when (h_count >= H_DISPLAY + H_FRONT_PORCH and h_count < H_DISPLAY + H_FRONT_PORCH + H_SYNC_PULSE) else '1';
+
+    -- Generate vertical sync pulse
+    vga_vs <= '0' when (v_count >= V_DISPLAY + V_FRONT_PORCH and v_count < V_DISPLAY + V_FRONT_PORCH + V_SYNC_PULSE) else '1';
+
+    -- Blanking signal
+    vga_blank <= '0' when (h_count < H_DISPLAY and v_count < V_DISPLAY) else '1';
+
+    -- RGB output logic (simple pattern)
+    process (h_count, v_count)
+    begin
+        if h_count < H_DISPLAY and v_count < V_DISPLAY then
+            -- Display a simple color gradient
+            vga_r <= std_logic_vector(to_unsigned(h_count(7 downto 0), 8)); -- Red varies with horizontal position
+            vga_g <= std_logic_vector(to_unsigned(v_count(7 downto 0), 8)); -- Green varies with vertical position
+            vga_b <= "00000000"; -- Blue is off
+        else
+            vga_r <= "00000000";
+            vga_g <= "00000000";
+            vga_b <= "00000000";
+        end if;
+    end process;
+
+    -- VGA sync (tied to ground for most designs)
+    vga_sync <= '0';
+
+end Behavioral;

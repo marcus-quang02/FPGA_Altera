@@ -1,0 +1,89 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity uart_tx_module is
+    port (
+        clk       : in  std_logic;
+        rst       : in  std_logic;
+        data_in   : in  std_logic_vector(7 downto 0);
+        start     : in  std_logic;
+        tx        : out std_logic;
+        busy      : out std_logic
+    );
+end entity;
+
+architecture rtl of uart_tx_module is
+    constant CLOCK_FREQ   : integer := 100_000_000; -- 50 MHz
+    constant BAUD_RATE    : integer := 115200;
+    constant BAUD_TICK    : integer := CLOCK_FREQ / BAUD_RATE;
+
+    type state_type is (IDLE, START_BIT, DATA_BITS, STOP_BIT);
+    signal state : state_type := IDLE;
+
+    signal tick_count : integer range 0 to BAUD_TICK := 0;
+    signal bit_index  : integer range 0 to 7 := 0;
+    signal tx_reg     : std_logic := '1';
+    signal busy_int   : std_logic := '0';
+    signal shift_reg  : std_logic_vector(7 downto 0) := (others => '0');
+begin
+
+    tx <= tx_reg;
+    busy <= busy_int;
+
+    process(clk, rst)
+    begin
+        if rst = '1' then
+            state <= IDLE;
+            tick_count <= 0;
+            bit_index <= 0;
+            tx_reg <= '1';
+            busy_int <= '0';
+        elsif rising_edge(clk) then
+            case state is
+                when IDLE =>
+                    tx_reg <= '1';
+                    busy_int <= '0';
+                    if start = '1' then
+                        shift_reg <= data_in;
+                        state <= START_BIT;
+                        tick_count <= 0;
+                        busy_int <= '1';
+                    end if;
+
+                when START_BIT =>
+                    tx_reg <= '0';
+                    if tick_count = BAUD_TICK then
+                        tick_count <= 0;
+                        state <= DATA_BITS;
+                        bit_index <= 0;
+                    else
+                        tick_count <= tick_count + 1;
+                    end if;
+
+                when DATA_BITS =>
+                    tx_reg <= shift_reg(bit_index);
+                    if tick_count = BAUD_TICK then
+                        tick_count <= 0;
+                        if bit_index = 7 then
+                            state <= STOP_BIT;
+                        else
+                            bit_index <= bit_index + 1;
+                        end if;
+                    else
+                        tick_count <= tick_count + 1;
+                    end if;
+
+                when STOP_BIT =>
+                    tx_reg <= '1';
+                    if tick_count = BAUD_TICK then
+                        state <= IDLE;
+                        tick_count <= 0;
+                    else
+                        tick_count <= tick_count + 1;
+                    end if;
+
+            end case;
+        end if;
+    end process;
+end rtl;

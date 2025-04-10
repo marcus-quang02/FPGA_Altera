@@ -1,0 +1,179 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
+ 
+entity Ex4 is
+  port( clk_50: in std_logic;
+        rst: in std_logic;  --SW0
+		  
+		  lcd_rs: out std_logic;
+		  lcd_en: out std_logic;
+		  lcd_on: out std_logic;
+		  lcd_blon: out std_logic;
+		  
+		  lcd_data: inout std_logic_vector( 7 downto 0)  
+       );
+end Ex4;
+
+architecture test of Ex4 is
+type state_type is (clear_display,return_home,mode_set,display_on,display_off,function_set,
+                    display_string,idle_lcd,reset,line2_mode);
+type character_string is array(0 to 31) of std_logic_vector (7 downto 0);
+signal pre_cmd,next_cmd: state_type;
+constant lcd_string: character_string:=(
+-- Line 1    H     E     L     L     O           W     O     R    L     D          
+          x"48",x"45",x"4C",x"4C",x"4F",x"20",x"57",x"4F",x"52",x"4C",x"44",x"20",x"20",x"20",x"20",x"20",
+-- Line 2                       
+          x"20",x"20",x"20",x"20",x"20",x"20",x"20",x"20",x"20",x"20",x"20",x"20",x"20",x"20",x"20",x"20" 
+);
+signal data_value,char: std_logic_vector(7 downto 0);
+signal char_cnt: integer:=0;
+signal clk_count: integer:=0;
+signal clk_enable: std_logic;
+signal lcd_rw_en:  std_logic;
+
+constant XTAL_FREQ: integer:= 50000000;
+  
+  begin
+  lcd_data<=data_value;
+
+  char<=lcd_string(char_cnt);
+  process(clk_50)
+  begin
+    if rising_edge(clk_50) then
+        if(rst='0') then
+		     clk_count<=0;
+			  clk_enable<='0';
+		  else 
+		     if(clk_count<=62500) then
+			     clk_count<=clk_count+1;
+				  clk_enable<='0';
+			  else
+			     clk_count<=0;
+				  clk_enable<='1';
+			  end if;
+		  end if;
+	  end if;
+  end process;
+  
+  
+  
+  process(clk_50)
+  begin
+    if(rst='0') then
+	    pre_cmd<=reset;
+		 data_value<=x"38";
+		 next_cmd<= reset;
+		 
+		 lcd_en<='1';
+		 lcd_on<='0';
+		 lcd_rs<='0';
+		 lcd_rw_en<='0';
+	 elsif rising_edge(clk_50) then
+	    if (clk_enable='1') then
+		    lcd_blon<='1';
+			 case pre_cmd is
+			     when reset => 
+				       lcd_en<='1';
+						 lcd_rs<='0';
+						 lcd_rw_en<='0';
+						 
+						 data_value<=x"38";
+						 pre_cmd<=idle_lcd;
+						 next_cmd <=function_set;
+						 char_cnt <=0;
+						 
+					when function_set =>
+					     lcd_en<='1';
+						  lcd_rs<='0';
+						  lcd_rw_en<='0';
+						  
+						  data_value<= x"38";
+						  -- data length=8 bits, number line=2, font=5*8
+						  pre_cmd <=idle_lcd;
+						  next_cmd <= display_off;
+					when display_off =>
+					     lcd_en<='1';
+						  lcd_rs<='0';
+						  lcd_rw_en<='0';
+						  
+						  data_value<= x"08";
+						  -- display off,cursor off,blink cursor off;
+						  pre_cmd<=idle_lcd;
+						  next_cmd<=clear_display;
+					when clear_display =>
+					     lcd_en<='1';
+						  lcd_rs<='0';
+						  lcd_rw_en<='0';
+						  
+						  data_value <= x"01";
+						  pre_cmd<=idle_lcd;
+						  next_cmd<=display_on;
+					when display_on =>
+					     lcd_en<='1';
+						  lcd_rs<='0';
+						  lcd_rw_en<='0';
+						  
+						  data_value <= x"0C";
+						  -- display on,cursor off,blink cursor off;
+						  pre_cmd<=idle_lcd;
+						  next_cmd<=mode_set;
+					when mode_set =>
+					     lcd_en<='1';
+						  lcd_rs<='0';
+						  lcd_rw_en<='0';
+						  
+						  data_value<=x"06";
+						  -- set cursor move and no display shift
+						  pre_cmd<=idle_lcd;
+						  next_cmd<=display_string;
+					when display_string =>
+					     lcd_en<='1';
+						  lcd_rs<='1';
+						  lcd_rw_en<='0';
+						  
+						  
+						  pre_cmd<=idle_lcd;
+						  data_value<=char;
+						 
+						  if (char_cnt < 31) and (char /= x"FE") then
+						     char_cnt <= char_cnt+1;
+						  else
+						     char_cnt <= 0;
+						  end if;
+						  
+						  if char_cnt=15 then  -- Line 2
+						     next_cmd<=line2_mode;
+						  elsif (char_cnt=31) and (char =x"FE") then
+						     next_cmd<= return_home;
+						  else
+						     next_cmd<=display_string;
+						  end if;
+						  
+					when line2_mode =>
+					     lcd_en<='1';
+						  lcd_rs<='0';
+						  lcd_rw_en<='0';
+						  
+						  data_value <= x"C0";
+						  pre_cmd<=idle_lcd;
+						  next_cmd<= display_string;	  
+					when return_home =>
+					     lcd_en<='1';
+						  lcd_rs<='0';
+						  lcd_rw_en<='0';
+						  
+						  data_value <= x"80";
+						  pre_cmd<=idle_lcd;
+						  next_cmd<= display_string;
+					when idle_lcd =>
+					     lcd_en<='0';
+						  lcd_blon<='1';
+						  lcd_on<='1';
+						  pre_cmd<=next_cmd;
+					end case;			 
+		 end if;
+    end if;
+  end process;
+end test;
