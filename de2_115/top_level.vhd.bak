@@ -1,0 +1,152 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity de2_115 is
+    port (
+        -- Clock Inputs
+        CLOCK_50    : in  std_logic;
+        CLOCK2_50   : in  std_logic;
+        CLOCK3_50   : in  std_logic;
+        CLOCK4_50   : in  std_logic;
+
+        -- Push Buttons
+        KEY         : in  std_logic_vector(3 downto 0);
+
+        -- Switches
+        SW          : in  std_logic_vector(17 downto 0);
+
+        -- LEDs
+        LEDG        : out std_logic_vector(8 downto 0);
+        LEDR        : out std_logic_vector(17 downto 0);
+
+        -- 7-Segment Displays
+        HEX0        : out std_logic_vector(6 downto 0);
+        HEX1        : out std_logic_vector(6 downto 0);
+        HEX2        : out std_logic_vector(6 downto 0);
+        HEX3        : out std_logic_vector(6 downto 0);
+        HEX4        : out std_logic_vector(6 downto 0);
+        HEX5        : out std_logic_vector(6 downto 0);
+
+        -- SDRAM
+        DRAM_ADDR   : out std_logic_vector(12 downto 0);
+        DRAM_BA     : out std_logic_vector(1 downto 0);
+        DRAM_CAS_N  : out std_logic;
+        DRAM_CKE    : out std_logic;
+        DRAM_CLK    : out std_logic;
+        DRAM_CS_N   : out std_logic;
+        DRAM_DQ     : inout std_logic_vector(31 downto 0);
+        DRAM_DQM    : out std_logic_vector(3 downto 0);
+        DRAM_RAS_N  : out std_logic;
+        DRAM_WE_N   : out std_logic;
+
+        -- SRAM
+        SRAM_ADDR   : out std_logic_vector(19 downto 0);
+        SRAM_DQ     : inout std_logic_vector(15 downto 0);
+        SRAM_CE_N   : out std_logic;
+        SRAM_OE_N   : out std_logic;
+        SRAM_WE_N   : out std_logic;
+        SRAM_UB_N   : out std_logic;
+        SRAM_LB_N   : out std_logic;
+
+        -- Flash
+        FL_ADDR     : out std_logic_vector(22 downto 0);
+        FL_DQ       : inout std_logic_vector(7 downto 0);
+        FL_CE_N     : out std_logic;
+        FL_OE_N     : out std_logic;
+        FL_WE_N     : out std_logic;
+        FL_RST_N    : out std_logic;
+        FL_BYTE_N   : out std_logic;
+
+        -- VGA
+        VGA_R       : out std_logic_vector(7 downto 0);
+        VGA_G       : out std_logic_vector(7 downto 0);
+        VGA_B       : out std_logic_vector(7 downto 0);
+        VGA_HS      : out std_logic;
+        VGA_VS      : out std_logic;
+        VGA_CLK     : out std_logic;
+        VGA_SYNC_N  : out std_logic;
+        VGA_BLANK_N : out std_logic;
+
+        -- Audio
+        AUD_ADCDAT  : in  std_logic;
+        AUD_BCLK    : inout std_logic;
+        AUD_ADCLRCK : inout std_logic;
+        AUD_DACLRCK : inout std_logic;
+        AUD_DACDAT  : out std_logic;
+        AUD_XCK     : out std_logic;
+
+        -- PS/2 Ports
+        PS2_CLK     : inout std_logic;
+        PS2_DAT     : inout std_logic;
+        PS2_CLK2    : inout std_logic;
+        PS2_DAT2    : inout std_logic;
+
+        -- GPIO
+        GPIO        : inout std_logic_vector(35 downto 0);
+
+        -- Ethernet
+        ENET_CLK    : out std_logic;
+        ENET_RST_N  : out std_logic;
+        ENET_INT_N  : in  std_logic;
+        ENET_CS_N   : out std_logic;
+        ENET_WE_N   : out std_logic;
+        ENET_OE_N   : out std_logic;
+        ENET_RD_N   : out std_logic;
+        ENET_WR_N   : out std_logic;
+        ENET_DATA   : inout std_logic_vector(15 downto 0);
+        ENET_RX_CLK : in  std_logic;
+        ENET_RX_DV  : in  std_logic;
+        ENET_RX_DATA: in  std_logic_vector(15 downto 0);
+        ENET_RX_ER  : in  std_logic;
+        ENET_TX_CLK : out std_logic;
+        ENET_TX_EN  : out std_logic;
+        ENET_TX_DATA: out std_logic_vector(15 downto 0);
+        ENET_TX_ER  : out std_logic;
+
+        -- USB
+        USB_DATA    : inout std_logic_vector(7 downto 0);
+        USB_CLK     : in  std_logic;
+        USB_DIR     : in  std_logic;
+        USB_NXT     : in  std_logic;
+        USB_STP     : out std_logic;
+
+        -- SD Card
+        SD_CLK      : out std_logic;
+        SD_CMD      : inout std_logic;
+        SD_DAT      : inout std_logic_vector(3 downto 0);
+
+        -- IR Receiver
+        IRDA_RXD    : in  std_logic;
+
+        -- Expansion Header
+        EXP         : inout std_logic_vector(35 downto 0);
+
+        -- HSMC
+        HSMC_CLKIN_P1  : in  std_logic;
+        HSMC_CLKIN_P2  : in  std_logic;
+        HSMC_CLKIN0    : in  std_logic;
+        HSMC_CLKOUT_P1 : out std_logic;
+        HSMC_CLKOUT_P2 : out std_logic;
+        HSMC_CLKOUT0   : out std_logic;
+        HSMC_D         : inout std_logic_vector(3 downto 0);
+        HSMC_TX_D      : inout std_logic_vector(16 downto 0);
+        HSMC_RX_D      : inout std_logic_vector(16 downto 0);
+        HSMC_TX_CLK    : in  std_logic;
+        HSMC_RX_CLK    : in  std_logic;
+        HSMC_SCL       : inout std_logic;
+        HSMC_SDA       : inout std_logic;
+
+        -- I2C
+        I2C_SCL     : inout std_logic;
+        I2C_SDA     : inout std_logic;
+
+        -- UART
+        UART_RXD    : in  std_logic;
+        UART_TXD    : out std_logic
+    );
+end de2_115;
+
+architecture rtl of de2_115 is
+begin
+    -- Add your implementation here if needed.
+end rtl;
