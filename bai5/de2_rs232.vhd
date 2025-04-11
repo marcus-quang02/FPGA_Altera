@@ -88,7 +88,7 @@ architecture test of de2_rs232 is
 		   clk_400Hz_cnt<=0;
 			clk_400Hz_enable<='0';
 		else
-		   if(clk_400Hz_cnt < 62500) then
+		   if(clk_400Hz_cnt < 500000) then
 		      	clk_400Hz_cnt<=clk_400Hz_cnt+1;
 				clk_400Hz_enable<='0';
 			else

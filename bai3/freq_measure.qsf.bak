@@ -51,22 +51,7 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -entity Button_Counter
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -entity Button_Counter -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -entity Button_Counter -section_id Top
 set_location_assignment PIN_AG14 -to clk
-set_location_assignment PIN_H22 -to seg1[6]
-set_location_assignment PIN_J22 -to seg1[5]
-set_location_assignment PIN_L25 -to seg1[4]
-set_location_assignment PIN_L26 -to seg1[3]
-set_location_assignment PIN_E17 -to seg1[2]
-set_location_assignment PIN_F22 -to seg1[1]
-set_location_assignment PIN_G18 -to seg1[0]
-set_location_assignment PIN_U24 -to seg2[6]
-set_location_assignment PIN_U23 -to seg2[5]
-set_location_assignment PIN_W25 -to seg2[4]
-set_location_assignment PIN_W22 -to seg2[3]
-set_location_assignment PIN_W21 -to seg2[2]
-set_location_assignment PIN_Y22 -to seg2[1]
-set_location_assignment PIN_M24 -to seg2[0]
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -entity Button_Counter -section_id Top
-set_location_assignment PIN_AF16 -to debug
 set_location_assignment PIN_M23 -to reset
 set_global_assignment -name QIP_FILE pll/synthesis/pll.qip
 set_global_assignment -name VHDL_FILE freq_measure.vhd
@@ -76,7 +61,23 @@ set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_location_assignment PIN_AB28 -to sw[0]
-set_location_assignment PIN_AC28 -to sw[1]
-set_location_assignment PIN_AC27 -to sw[2]
+set_location_assignment PIN_AB28 -to SW[0]
+set_location_assignment PIN_AC28 -to SW[1]
+set_location_assignment PIN_AC27 -to SW[2]
+set_location_assignment PIN_G19 -to LEDR[0]
+set_location_assignment PIN_F19 -to LEDR[1]
+set_location_assignment PIN_E19 -to LEDR[2]
+set_location_assignment PIN_F21 -to LEDR[3]
+set_location_assignment PIN_F18 -to LEDR[4]
+set_location_assignment PIN_E18 -to LEDR[5]
+set_location_assignment PIN_J19 -to LEDR[6]
+set_location_assignment PIN_H19 -to LEDR[7]
+set_location_assignment PIN_J17 -to LEDR[8]
+set_location_assignment PIN_G17 -to LEDR[9]
+set_location_assignment PIN_J15 -to LEDR[10]
+set_location_assignment PIN_H16 -to LEDR[11]
+set_location_assignment PIN_J16 -to LEDR[12]
+set_location_assignment PIN_F15 -to LEDR[14]
+set_location_assignment PIN_H17 -to LEDR[13]
+set_location_assignment PIN_G15 -to LEDR[15]
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

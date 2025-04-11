@@ -4,7 +4,7 @@
 `include "parameter.v"       // Include definition file
 // fpga4student.com: FPGA projects for students
 // FPGA project: Image processing in Verilog
-module image_read
+module image_processing
 #(
   parameter     WIDTH  = 768,   // Image width
          HEIGHT  = 512,   // Image height

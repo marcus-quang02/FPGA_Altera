@@ -11,6 +11,8 @@ entity read_image_VHDL is
     IMAGE_SIZE  : integer := 15;
     IMAGE_FILE_NAME : string :="IMAGE_FILE.MIF"
   );
+  
+  
   port(
     clock: IN STD_LOGIC;
     data: IN std_logic_vector ((DATA_WIDTH-1) DOWNTO 0);
