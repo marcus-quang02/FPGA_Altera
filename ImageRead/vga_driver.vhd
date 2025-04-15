@@ -49,29 +49,21 @@ signal v_counter: integer range 0 to VPOS_MAX;
 
 
 signal square_x :integer := 480;
-
 signal square_counter : integer range 0 to 25200000 ;
 signal blink				: std_logic ;
-
 constant square_size 	: integer := 100;
 
-
-
 signal dir_x    : integer := 1;  -- +1 for right, -1 for left
-
 signal move_counter : integer range 0 to 4_999_999 := 0;
-signal tick    : std_logic := '0';
-
-
-
 
 type string is array ( 0 to 15) of std_logic_vector( 7 downto 0);
+signal addr    : integer range 0 to 307199 := 0; 
 
-constant ADDR_BUS_SIZE : INTEGER := 4;
-constant DATA_BUS_SIZE : INTEGER :=8;
+constant ADDR_BUS_SIZE : INTEGER := 20;
+constant DATA_BUS_SIZE : INTEGER := 8;
 
-signal read_addr :  	 STD_logic_vector((ADDR_BUS_SIZE-1) downto 0) := "0000";
-signal write_addr: 	 STD_logic_vector((ADDR_BUS_SIZE-1) downto 0) := "0000";
+signal read_addr :  	 STD_logic_vector((ADDR_BUS_SIZE-1) downto 0) := "00000000000000000000";
+signal write_addr: 	 STD_logic_vector((ADDR_BUS_SIZE-1) downto 0) := "00000000000000000000";
 signal write_en	:	 STD_LOGIC := '0';
 signal read_en		:	 STD_LOGIC := '0';
 
@@ -79,11 +71,7 @@ signal data_in		:  std_logic_vector((DATA_BUS_SIZE-1) DOWNTO 0);
 signal data_out	:  std_logic_vector((DATA_BUS_SIZE-1) DOWNTO 0);
 
 signal delayed_data : std_logic_vector(7 downto 0);
-
-
-
 signal blink_state : std_logic := '0'; 
-
 
 
 component PLL is
@@ -96,12 +84,11 @@ end component PLL;
 
 
 component image_read is 
-
   generic (
-    ADDR_WIDTH     	: integer := 4;        
+    ADDR_WIDTH     	: integer := 20;  ---- 2^20 = 1048576
+	IMAGE_SIZE     	: integer := 307199;  ---- 640*480-1   
     DATA_WIDTH     	: integer := 8
   );
-
 port (
     clock: 				IN STD_LOGIC;
 
@@ -113,13 +100,11 @@ port (
 	data_in: 			IN std_logic_vector((DATA_WIDTH-1) DOWNTO 0);
     data_out: 			OUT std_logic_vector((DATA_WIDTH-1) DOWNTO 0)
 );
-
 end component;
 
 
 
-BEGIN
-	
+begin
 
 vga_clk<= clk_25;
 
@@ -206,23 +191,15 @@ DISPLAY: process(clk_25, rst, h_counter, video, v_counter)
 begin
 
 if (rst = '0') then
-    
     vga_r <= (others => '0');
     vga_g <= (others => '0');
     vga_b <= (others => '0');
 
 elsif rising_edge(clk_25) then
     if (video = '1') then
-        -- if (h_counter > H_VIDEO_CENTER - square_size/2 ) and (h_counter < H_VIDEO_CENTER + square_size/2) and 
-        --     (v_counter > V_VIDEO_CENTER - 50 ) and (v_counter < V_VIDEO_CENTER - 50) then
-					vga_r <= data_out(7 downto 0);
-					vga_g <= data_out(7 downto 0);
-					vga_b <= data_out(7 downto 0);
-			-- 	else
-			-- 		vga_r <= (others => '1');
-			-- 		vga_g <= (others => '0');
-			-- 		vga_b <= (others => '0');
-			-- end if;
+		vga_r <= data_out(7 downto 0);
+		vga_g <= data_out(7 downto 0);
+		vga_b <= data_out(7 downto 0);
     else
         vga_r <= (others => '0');
         vga_g <= (others => '0');
@@ -240,32 +217,40 @@ begin
 	   read_en <= '0';
 	   read_addr <= (others => '0');
    elsif rising_edge(clk_25) then
+		if (h_counter > (Hor_Sync_Time + Hor_Back_Porch + Hor_Front_Porch)) and (v_counter > (V_Sync_Time + V_Back_Porch + V_Front_Porch)) then
+				if (addr < 307199) then
+					addr <= addr + 1;
+				else
+					addr <= 0;
+				end if;
+		end if;
+
 	   if (video = '1') then
                 read_en <= '1';
-                if ( tick = '0' )then
-                    read_addr <= std_logic_vector(to_unsigned(0000, ADDR_BUS_SIZE));
-                elsif ( tick = '1' ) then
-                    read_addr <= std_logic_vector(to_unsigned(0001, ADDR_BUS_SIZE));
-                end if;
+                read_addr <= std_logic_vector(to_unsigned(addr, ADDR_BUS_SIZE));
         else
 			   read_en <= '0';
 		end if;
    end if;
 end process;
 
-BLINKING_SQUARE : process (clk_25) 
-begin
+-- ADDRESS_INCREMENT : process (clk_25) 
+-- begin
 
-	if  rising_edge(clk_25)  then
-		if (square_counter < 25_200_000) then 
-			square_counter <= square_counter + 1;
-		else 
-			tick <= not tick;
-			square_counter <= 0;
-		end if;
-	end if;
+-- 	if  rising_edge(clk_25)  then
+-- 		if (square_counter < 25_200_000) then 
+-- 			square_counter <= square_counter + 1;
+-- 		else 
+-- 			if addr < 15 then
+-- 				addr <= addr + 1;
+-- 			else
+-- 				addr <= 0;
+-- 			end if;
+-- 			square_counter <= 0;
+-- 		end if;
+-- 	end if;
 
-end process;
+-- end process;
 
 
 --MOVING_SQUARE: process(clk_25, rst)
@@ -275,7 +260,7 @@ end process;
 --        square_x <= 460;
 --        dir_x <= 1;
 --    elsif rising_edge(clk_25) then
---        if tick  then
+--        if addr  then
 --            -- Update X
 --            if square_x <= 0 then
 --                dir_x <= 1;
